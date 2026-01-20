@@ -2,13 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no">
     <title>My Calendar Organizer</title>
     <style>
-
       /* iOS Fixes */
 html {
     height: 100%;
@@ -812,6 +811,73 @@ body {
         font-size: 20px;
         margin-bottom: 12px;
     }
+    
+    /* Mobile-specific improvements */
+    .item-card {
+        padding: 14px;
+    }
+    
+    .item-title {
+        font-size: 17px;
+    }
+    
+    .item-description {
+        font-size: 15px;
+    }
+    
+    .modal-content {
+        max-height: 90vh;
+    }
+    
+    .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .form-input, .form-select, .form-textarea {
+        padding: 14px;
+    }
+    
+    .quick-add-btn {
+        padding: 12px 20px;
+        font-size: 15px;
+    }
+    
+    .icon-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+    
+    .nav-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+    
+    .month-display {
+        font-size: 18px;
+        min-width: 150px;
+    }
+    
+    .header {
+        padding: 12px;
+    }
+    
+    .bottom-nav {
+        padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    }
+    
+    .nav-item {
+        padding: 6px 12px;
+    }
+    
+    .nav-item-icon {
+        font-size: 22px;
+    }
+    
+    .nav-item {
+        font-size: 11px;
+    }
 }
     </style>
 </head>
@@ -1118,13 +1184,12 @@ function initializeApp() {
   loadAllData();
 }
 
-
-
 function loadTheme() {
   const theme = localStorage.getItem('theme') || 'light';
-  document.body.setAttribute('data-theme', theme);
+  if (theme === 'dark') {
+    document.body.classList.add('dark');
+  }
 }
-
 
         function toggleTheme() {
             document.body.classList.toggle('dark');
@@ -1209,8 +1274,6 @@ google.script.run
     .getExpenses(startDate, endDate);
 }
 
-
-
 function debugData() {
   console.log("ok allTasks:", allTasks);
   console.log("ok allReminders:", allReminders);
@@ -1232,7 +1295,6 @@ function checkTodayPopup() {
         hasShownTodayPopup = true;
     }
 }
-
 
 function showTodayPopup() {
     const today = new Date().toISOString().split('T')[0];
@@ -1274,7 +1336,6 @@ function animateCalendarChange() {
         grid.style.opacity = '1';
     }, 100);
 }
-
 
         function renderCalendar() {
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -1351,7 +1412,6 @@ function animateCalendarChange() {
 const tasksCount = allTasks.filter(t => t.date === dateStr).length;
 const remindersCount = allReminders.filter(r => r.date === dateStr).length;
 const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
-
 
                 if (tasksCount > 0) {
                     const indicator = document.createElement('div');
@@ -1587,36 +1647,280 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
                         if (type === 'reminder') allReminders = allReminders.filter(r => r.id !== id);
                         if (type === 'expense') allExpenses = allExpenses.filter(e => e.id !== id);
                         
-                        renderCalendar();
-                        renderAllTasks();
-                        renderAllReminders();
-                        renderAllExpenses();
-                        showNotification('✅ Item deleted successfully!');
+                        // Refresh current view
+                        if (currentView === 'calendar') {
+                            renderCalendar();
+                        } else if (currentView === 'tasks') {
+                            renderAllTasks();
+                        } else if (currentView === 'reminders') {
+                            renderAllReminders();
+                        } else if (currentView === 'expenses') {
+                            renderAllExpenses();
+                        }
+                        
+                        showNotification('Item deleted successfully');
                     }
                 })
                 .withFailureHandler(handleError)
                 [funcName](id);
         }
 
+        // UI Functions
+        function showView(view) {
+            currentView = view;
+            
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.nav-item').classList.add('active');
+            
+            // Show/hide sections
+            document.getElementById('calendarSection').style.display = view === 'calendar' ? 'block' : 'none';
+            document.getElementById('tasksSection').style.display = view === 'tasks' ? 'block' : 'none';
+            document.getElementById('remindersSection').style.display = view === 'reminders' ? 'block' : 'none';
+            document.getElementById('expensesSection').style.display = view === 'expenses' ? 'block' : 'none';
+            
+            // Render data if needed
+            if (view === 'tasks') renderAllTasks();
+            if (view === 'reminders') renderAllReminders();
+            if (view === 'expenses') renderAllExpenses();
+        }
+
+        function showAddTask() {
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function showAddReminder() {
+            document.getElementById('reminderModal').classList.add('active');
+        }
+
+        function showAddExpense() {
+            document.getElementById('expenseModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showSearch() {
+            document.getElementById('searchModal').classList.add('active');
+            document.getElementById('searchInput').focus();
+        }
+
+        function showStats() {
+            document.getElementById('statsModal').classList.add('active');
+            loadStats();
+        }
+
+        function loadStats() {
+            const statsContent = document.getElementById('statsContent');
+            
+            // Calculate stats
+            const totalTasks = allTasks.length;
+            const completedTasks = allTasks.filter(t => t.completed).length;
+            const totalReminders = allReminders.length;
+            const totalExpenses = allExpenses.length;
+            const totalExpenseAmount = allExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0).toFixed(2);
+            
+            // Group expenses by category
+            const expensesByCategory = {};
+            allExpenses.forEach(e => {
+                if (!expensesByCategory[e.category]) expensesByCategory[e.category] = 0;
+                expensesByCategory[e.category] += parseFloat(e.amount);
+            });
+            
+            // Generate HTML
+            let html = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${totalTasks}</div>
+                        <div class="stat-label">Total Tasks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${completedTasks}</div>
+                        <div class="stat-label">Completed Tasks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${totalReminders}</div>
+                        <div class="stat-label">Total Reminders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">$${totalExpenseAmount}</div>
+                        <div class="stat-label">Total Expenses</div>
+                    </div>
+                </div>
+            `;
+            
+            if (Object.keys(expensesByCategory).length > 0) {
+                html += '<h3 style="margin-top: 20px; margin-bottom: 10px;">Expenses by Category</h3>';
+                for (const [category, amount] of Object.entries(expensesByCategory)) {
+                    html += `
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border);">
+                            <span>${category}</span>
+                            <span style="font-weight: 600;">$${amount.toFixed(2)}</span>
+                        </div>
+                    `;
+                }
+            }
+            
+            statsContent.innerHTML = html;
+        }
+
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const results = document.getElementById('searchResults');
+            
+            if (!query) {
+                results.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><div>Start typing to search</div></div>';
+                return;
+            }
+            
+            results.innerHTML = '';
+            
+            let hasResults = false;
+            
+            // Search tasks
+            if (searchFilter === 'all' || searchFilter === 'tasks') {
+                const matchingTasks = allTasks.filter(t => 
+                    t.title.toLowerCase().includes(query) || 
+                    (t.description && t.description.toLowerCase().includes(query))
+                );
+                
+                if (matchingTasks.length > 0) {
+                    hasResults = true;
+                    matchingTasks.forEach(task => results.appendChild(createTaskCard(task)));
+                }
+            }
+            
+            // Search reminders
+            if (searchFilter === 'all' || searchFilter === 'reminders') {
+                const matchingReminders = allReminders.filter(r => 
+                    r.title.toLowerCase().includes(query) || 
+                    (r.description && r.description.toLowerCase().includes(query))
+                );
+                
+                if (matchingReminders.length > 0) {
+                    hasResults = true;
+                    matchingReminders.forEach(reminder => results.appendChild(createReminderCard(reminder)));
+                }
+            }
+            
+            // Search expenses
+            if (searchFilter === 'all' || searchFilter === 'expenses') {
+                const matchingExpenses = allExpenses.filter(e => 
+                    e.description.toLowerCase().includes(query) || 
+                    e.category.toLowerCase().includes(query)
+                );
+                
+                if (matchingExpenses.length > 0) {
+                    hasResults = true;
+                    matchingExpenses.forEach(expense => results.appendChild(createExpenseCard(expense)));
+                }
+            }
+            
+            if (!hasResults) {
+                results.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><div>No results found</div></div>';
+            }
+        }
+
+        function filterSearch(filter) {
+            searchFilter = filter;
+            
+            // Update filter chips
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Re-run search
+            performSearch();
+        }
+
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            animateCalendarChange();
+            setTimeout(() => {
+                renderCalendar();
+                loadAllData();
+            }, 200);
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            animateCalendarChange();
+            setTimeout(() => {
+                renderCalendar();
+                loadAllData();
+            }, 200);
+        }
+
+        function selectPriority(priority, type) {
+            // Update selected button
+            const container = event.target.closest('.priority-selector');
+            container.querySelectorAll('.priority-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            
+            // Update hidden input
+            document.getElementById(`${type}Priority`).value = priority;
+        }
+
+        function selectColor(color, type) {
+            // Update selected color
+            const container = event.target.closest('.color-picker');
+            container.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            
+            // Update hidden input
+            document.getElementById(`${type}Color`).value = color;
+        }
+
         function addTask(event) {
             event.preventDefault();
-
+            
             const task = {
                 title: document.getElementById('taskTitle').value,
                 description: document.getElementById('taskDescription').value,
                 date: document.getElementById('taskDate').value,
                 category: document.getElementById('taskCategory').value,
                 priority: document.getElementById('taskPriority').value,
-                color: document.getElementById('taskColor').value
+                color: document.getElementById('taskColor').value,
+                completed: false
             };
-
+            
             google.script.run
                 .withSuccessHandler(function(result) {
                     if (result.success) {
+                        task.id = result.id;
+                        allTasks.push(task);
+                        
+                        // Reset form
+                        document.getElementById('taskTitle').value = '';
+                        document.getElementById('taskDescription').value = '';
+                        
+                        // Close modal
                         closeModal('taskModal');
-                        event.target.reset();
-                        loadAllData();
-                        showNotification('✅ Task added successfully!');
+                        
+                        // Refresh view
+                        if (currentView === 'calendar') {
+                            renderCalendar();
+                        } else if (currentView === 'tasks') {
+                            renderAllTasks();
+                        }
+                        
+                        showNotification('Task added successfully');
                     }
                 })
                 .withFailureHandler(handleError)
@@ -1625,22 +1929,35 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
 
         function addReminder(event) {
             event.preventDefault();
-
+            
             const reminder = {
                 title: document.getElementById('reminderTitle').value,
                 description: document.getElementById('reminderDescription').value,
                 date: document.getElementById('reminderDate').value,
-                time: document.getElementById('reminderTime').value,
-                notifyBefore: 15
+                time: document.getElementById('reminderTime').value
             };
-
+            
             google.script.run
                 .withSuccessHandler(function(result) {
                     if (result.success) {
+                        reminder.id = result.id;
+                        allReminders.push(reminder);
+                        
+                        // Reset form
+                        document.getElementById('reminderTitle').value = '';
+                        document.getElementById('reminderDescription').value = '';
+                        
+                        // Close modal
                         closeModal('reminderModal');
-                        event.target.reset();
-                        loadAllData();
-                        showNotification('✅ Reminder added successfully!');
+                        
+                        // Refresh view
+                        if (currentView === 'calendar') {
+                            renderCalendar();
+                        } else if (currentView === 'reminders') {
+                            renderAllReminders();
+                        }
+                        
+                        showNotification('Reminder added successfully');
                     }
                 })
                 .withFailureHandler(handleError)
@@ -1649,400 +1966,109 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
 
         function addExpense(event) {
             event.preventDefault();
-
+            
             const expense = {
-                amount: parseFloat(document.getElementById('expenseAmount').value),
+                amount: document.getElementById('expenseAmount').value,
                 category: document.getElementById('expenseCategory').value,
                 description: document.getElementById('expenseDescription').value,
                 date: document.getElementById('expenseDate').value,
                 paymentMethod: document.getElementById('expensePayment').value
             };
-
+            
             google.script.run
                 .withSuccessHandler(function(result) {
                     if (result.success) {
+                        expense.id = result.id;
+                        allExpenses.push(expense);
+                        
+                        // Reset form
+                        document.getElementById('expenseAmount').value = '';
+                        document.getElementById('expenseDescription').value = '';
+                        
+                        // Close modal
                         closeModal('expenseModal');
-                        event.target.reset();
-                        loadAllData();
-                        showNotification('✅ Expense added successfully!');
+                        
+                        // Refresh view
+                        if (currentView === 'calendar') {
+                            renderCalendar();
+                        } else if (currentView === 'expenses') {
+                            renderAllExpenses();
+                        }
+                        
+                        showNotification('Expense added successfully');
                     }
                 })
                 .withFailureHandler(handleError)
                 .addExpense(expense);
         }
 
-        function showAddTask() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('taskDate').value = today;
-            document.getElementById('taskModal').classList.add('active');
-        }
-
-        function showAddReminder() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('reminderDate').value = today;
-            document.getElementById('reminderModal').classList.add('active');
-        }
-
-        function showAddExpense() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('expenseDate').value = today;
-            document.getElementById('expenseModal').classList.add('active');
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-function prevMonth() {
-    currentMonth--;
-    if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-    }
-    hasShownTodayPopup = true;
-
-    animateCalendarChange();
-    renderCalendar(); // show new month instantly
-    loadAllData();    // then update data in background
-}
-
-function nextMonth() {
-    currentMonth++;
-    if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-    }
-    hasShownTodayPopup = true;
-
-    animateCalendarChange();
-    renderCalendar(); // show new month instantly
-    loadAllData();    // then update data in background
-}
-
-
-        function showStats() {
-            document.getElementById('statsModal').classList.add('active');
-            
-            google.script.run
-                .withSuccessHandler(function(result) {
-                    if (result.success) {
-                        renderStats(result.stats);
-                    }
-                })
-                .withFailureHandler(handleError)
-                .getStatistics(currentMonth + 1, currentYear);
-        }
-
-        function renderStats(stats) {
-            const container = document.getElementById('statsContent');
-            
-            const completionRate = stats.totalTasks > 0 
-                ? ((stats.completedTasks / stats.totalTasks) * 100).toFixed(1)
-                : 0;
-
-            let expenseBreakdown = '';
-            for (const [category, amount] of Object.entries(stats.expensesByCategory)) {
-                const percentage = ((amount / stats.totalExpenses) * 100).toFixed(1);
-                expenseBreakdown += `
-                    <div class="item-card" style="margin-bottom: 12px;">
-                        <div class="item-header">
-                            <div class="item-title">${category}</div>
-                            <div style="font-weight: 700; color: var(--success);">${amount.toFixed(2)}</div>
-                        </div>
-                        <div style="margin-top: 8px; height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden;">
-                            <div style="height: 100%; background: var(--success); width: ${percentage}%;"></div>
-                        </div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${percentage}% of total</div>
-                    </div>
-                `;
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
             }
-
-            container.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.totalTasks}</div>
-                        <div class="stat-label">Total Tasks</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" style="color: var(--success);">${stats.completedTasks}</div>
-                        <div class="stat-label">Completed</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" style="color: var(--warning);">${stats.totalReminders}</div>
-                        <div class="stat-label">Reminders</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" style="color: var(--success);">${stats.totalExpenses.toFixed(2)}</div>
-                        <div class="stat-label">Total Expenses</div>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 20px;">
-                    <h3 style="margin-bottom: 12px; font-size: 18px;">Task Completion Rate</h3>
-                    <div class="stat-card">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                            <div style="font-size: 16px; font-weight: 600;">Progress</div>
-                            <div style="font-size: 24px; font-weight: 700; color: var(--primary);">${completionRate}%</div>
-                        </div>
-                        <div style="height: 12px; background: var(--bg); border-radius: 6px; overflow: hidden;">
-                            <div style="height: 100%; background: var(--primary); width: ${completionRate}%; transition: width 0.3s;"></div>
-                        </div>
-                    </div>
-                </div>
-
-                ${stats.totalExpenses > 0 ? `
-                    <div style="margin-top: 20px;">
-                        <h3 style="margin-bottom: 12px; font-size: 18px;">Expense Breakdown</h3>
-                        ${expenseBreakdown}
-                    </div>
-                ` : ''}
-            `;
-        }
-
-        function showSearch() {
-            document.getElementById('searchModal').classList.add('active');
-            document.getElementById('searchInput').value = '';
-            document.getElementById('searchResults').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><div>Start typing to search</div></div>';
-        }
-
-        function performSearch() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const results = document.getElementById('searchResults');
-            
-            if (query.length === 0) {
-                results.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><div>Start typing to search</div></div>';
-                return;
-            }
-
-            results.innerHTML = '';
-
-            let filteredTasks = allTasks;
-            let filteredReminders = allReminders;
-            let filteredExpenses = allExpenses;
-
-            if (searchFilter === 'tasks') {
-                filteredReminders = [];
-                filteredExpenses = [];
-            } else if (searchFilter === 'reminders') {
-                filteredTasks = [];
-                filteredExpenses = [];
-            } else if (searchFilter === 'expenses') {
-                filteredTasks = [];
-                filteredReminders = [];
-            }
-
-            const matchedTasks = filteredTasks.filter(t => 
-                t.title.toLowerCase().includes(query) || 
-                t.description.toLowerCase().includes(query) ||
-                t.category.toLowerCase().includes(query)
-            );
-
-            const matchedReminders = filteredReminders.filter(r => 
-                r.title.toLowerCase().includes(query) || 
-                r.description.toLowerCase().includes(query)
-            );
-
-            const matchedExpenses = filteredExpenses.filter(e => 
-                e.description.toLowerCase().includes(query) ||
-                e.category.toLowerCase().includes(query)
-            );
-
-            if (matchedTasks.length === 0 && matchedReminders.length === 0 && matchedExpenses.length === 0) {
-                results.innerHTML = '<div class="empty-state"><div class="empty-state-icon">😕</div><div>No results found</div></div>';
-                return;
-            }
-
-            matchedTasks.forEach(task => results.appendChild(createTaskCard(task)));
-            matchedReminders.forEach(reminder => results.appendChild(createReminderCard(reminder)));
-            matchedExpenses.forEach(expense => results.appendChild(createExpenseCard(expense)));
-        }
-
-        function filterSearch(type) {
-            searchFilter = type;
-            
-            // Update filter chips
-            document.querySelectorAll('.filter-chip').forEach(chip => {
-                chip.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            performSearch();
-        }
-
-        function showView(view) {
-            currentView = view;
-
-            // Update nav items
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.closest('.nav-item').classList.add('active');
-
-            // Hide all sections
-            document.getElementById('todaySection').style.display = 'none';
-            document.querySelector('.calendar-section').style.display = 'none';
-            document.getElementById('tasksSection').style.display = 'none';
-            document.getElementById('remindersSection').style.display = 'none';
-            document.getElementById('expensesSection').style.display = 'none';
-
-// Show selected section
-if (view === 'calendar') {
-    document.querySelector('.calendar-section').style.display = 'block';
-    document.getElementById('monthSelector').style.display = 'flex'; // 👈 show arrows
-} else {
-    document.getElementById('monthSelector').style.display = 'none'; // 👈 hide arrows
-}
-
-if (view === 'tasks') {
-    document.getElementById('tasksSection').style.display = 'block';
-    renderAllTasks();
-} else if (view === 'reminders') {
-    document.getElementById('remindersSection').style.display = 'block';
-    renderAllReminders();
-} else if (view === 'expenses') {
-    document.getElementById('expensesSection').style.display = 'block';
-    renderAllExpenses();
-}
-}
-
-        function selectPriority(priority, type) {
-            document.querySelectorAll(`#${type}Modal .priority-btn`).forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            event.target.classList.add('selected');
-            document.getElementById(`${type}Priority`).value = priority;
-        }
-
-        function selectColor(color, type) {
-            document.querySelectorAll(`#${type}Modal .color-option`).forEach(option => {
-                option.classList.remove('selected');
-            });
-            event.target.classList.add('selected');
-            document.getElementById(`${type}Color`).value = color;
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
         }
 
         function showNotification(message, duration = 3000) {
             // Create notification element
             const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: var(--card-bg);
-                color: var(--text);
-                padding: 16px 24px;
-                border-radius: 12px;
-                box-shadow: 0 4px 12px var(--shadow);
-                z-index: 10000;
-                font-weight: 600;
-                animation: slideDown 0.3s ease;
-                max-width: 90%;
-                text-align: center;
-                white-space: pre-line;
-            `;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.left = '50%';
+            notification.style.transform = 'translateX(-50%)';
+            notification.style.backgroundColor = 'var(--card-bg)';
+            notification.style.color = 'var(--text)';
+            notification.style.padding = '12px 20px';
+            notification.style.borderRadius = '10px';
+            notification.style.boxShadow = '0 4px 12px var(--shadow)';
+            notification.style.zIndex = '2000';
+            notification.style.maxWidth = '80%';
+            notification.style.textAlign = 'center';
+            notification.style.whiteSpace = 'pre-line';
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.3s';
+            
             notification.textContent = message;
             document.body.appendChild(notification);
-
-            // Add animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes slideDown {
-                    from { transform: translate(-50%, -100%); opacity: 0; }
-                    to { transform: translate(-50%, 0); opacity: 1; }
-                }
-            `;
-            document.head.appendChild(style);
-
+            
+            // Fade in
+            setTimeout(() => {
+                notification.style.opacity = '1';
+            }, 10);
+            
             // Remove after duration
             setTimeout(() => {
-                notification.style.animation = 'slideDown 0.3s ease reverse';
+                notification.style.opacity = '0';
                 setTimeout(() => {
-                    notification.remove();
-                    style.remove();
+                    document.body.removeChild(notification);
                 }, 300);
             }, duration);
         }
 
         function handleError(error) {
-            console.error('Error:', error);
-            showNotification('❌ An error occurred. Please try again.');
+            console.error(error);
+            showNotification('An error occurred. Please try again.');
         }
 
-        // Close modals when clicking outside
-        document.addEventListener('click', function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.classList.remove('active');
-            }
-        });
-
-        function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen()
-            .then(() => showNotification('🖥️ Entered fullscreen mode'))
-            .catch(err => console.error('Fullscreen error:', err));
-    } else {
-        document.exitFullscreen()
-            .then(() => showNotification('📴 Exited fullscreen mode'))
-            .catch(err => console.error('Exit fullscreen error:', err));
-    }
-}
-
-// --- normalize any incoming date (string or Date) to 'YYYY-MM-DD' ----
-function toYMD(d) {
-    if (!d) return '';
-    // If it's already a string like '2025-10-20' return as-is (safer)
-    if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
-    // Otherwise coerce to Date and use UTC date portion
-    const dt = (typeof d === 'string') ? new Date(d) : d;
-    if (!(dt instanceof Date) || isNaN(dt)) return '';
-    return dt.toISOString().split('T')[0];
-}
-
-
-        // Voice input support (if available)
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
             
-            function startVoiceInput(inputId) {
-                const recognition = new SpeechRecognition();
-                recognition.lang = 'en-US';
-                recognition.continuous = false;
-                
-                recognition.onresult = function(event) {
-                    const transcript = event.results[0][0].transcript;
-                    document.getElementById(inputId).value = transcript;
-                };
-                
-                recognition.onerror = function(event) {
-                    console.error('Speech recognition error:', event.error);
-                    showNotification('❌ Voice input failed. Please try again.');
-                };
-                
-                recognition.start();
-                showNotification('🎤 Listening...');
-            }
-            
-            // Add voice input buttons to forms
-            window.startVoiceInput = startVoiceInput;
+            return text.replace(/[&<>"']/g, m => map[m]);
         }
 
-        // Service Worker for offline support (optional)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                // Service worker registration would go here for PWA functionality
-            });
-        }
-
-        // Request notification permission
-        if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
+        function toYMD(date) {
+            if (typeof date === 'string') return date;
+            const d = new Date(date);
+            return d.toISOString().split('T')[0];
         }
     </script>
 </body>
