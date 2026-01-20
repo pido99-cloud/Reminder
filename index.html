@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no">
@@ -781,7 +781,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px; /* adjust spacing between arrows and month name */
+    gap: 10px;
 }
 
 #calendarGrid {
@@ -812,7 +812,6 @@ body {
         margin-bottom: 12px;
     }
     
-    /* Mobile-specific improvements */
     .item-card {
         padding: 14px;
     }
@@ -879,274 +878,363 @@ body {
         font-size: 11px;
     }
 }
+
+/* Password protection styles */
+.password-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--card-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.password-container {
+    background: var(--bg);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 10px 30px var(--shadow);
+}
+
+.password-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--primary);
+}
+
+.password-input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 18px;
+    margin-bottom: 20px;
+    background: var(--card-bg);
+    color: var(--text);
+}
+
+.password-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.password-btn:active {
+    transform: scale(0.98);
+}
+
+.password-error {
+    color: var(--danger);
+    margin-top: 10px;
+    font-size: 14px;
+}
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <div class="header">
-        <div class="header-top">
-            <div class="logo">📅 My Calendar</div>
-            <div class="header-actions">
-                <button class="icon-btn" onclick="showSearch()" title="Search">🔍</button>
-                <button class="icon-btn" onclick="showStats()" title="Statistics">📊</button>
-                <button class="icon-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">🖥️</button>
-                <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
-            </div>
-        </div>
-<div class="month-selector" id="monthSelector">
-    <div class="month-display-group">
-        <button class="nav-btn" onclick="prevMonth()">◀</button>
-        <div class="month-display" id="monthDisplay"></div>
-        <button class="nav-btn" onclick="nextMonth()">▶</button>
-    </div>
-</div>
-
-    </div>
-
-    <!-- Quick Add Buttons -->
-    <div class="quick-add">
-        <button class="quick-add-btn task" onclick="showAddTask()">➕ Task</button>
-        <button class="quick-add-btn reminder" onclick="showAddReminder()">📌  Reminder</button>
-        <button class="quick-add-btn expense" onclick="showAddExpense()">$ Expense</button>
-    </div>
-
-    <!-- Today's Items Section - Hidden by default -->
-    <div class="today-section" id="todaySection" style="display: none;">
-        <div class="section-title">
-            <span>📋 Today's Items</span>
-        </div>
-        <div class="items-list" id="todayItems">
-            <div class="loading">Loading...</div>
+    <!-- Password Protection Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-container">
+            <div class="password-title">🔐 Calendar Access</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password" autocomplete="off">
+            <button class="password-btn" onclick="checkPassword()">Unlock</button>
+            <div class="password-error" id="passwordError"></div>
         </div>
     </div>
 
-    <!-- All Tasks Section -->
-    <div class="all-section" id="tasksSection" style="display: none;">
-        <div class="section-title">
-            <span>✅ All Tasks</span>
-        </div>
-        <div class="items-list" id="allTasks">
-            <div class="loading">Loading...</div>
-        </div>
-    </div>
-
-    <!-- All Reminders Section -->
-    <div class="all-section" id="remindersSection" style="display: none;">
-        <div class="section-title">
-            <span>📌  All Reminders</span>
-        </div>
-        <div class="items-list" id="allRemindersDisplay">
-            <div class="loading">Loading...</div>
-        </div>
-    </div>
-
-    <!-- All Expenses Section -->
-    <div class="all-section" id="expensesSection" style="display: none;">
-        <div class="section-title">
-            <span>$ All Expenses</span>
-        </div>
-        <div class="items-list" id="allExpenses">
-            <div class="loading">Loading...</div>
-        </div>
-    </div>
-
-    <!-- Calendar Section -->
-    <div class="calendar-section">
-        <div class="section-title">📅 Calendar View</div>
-        <div class="calendar-grid" id="calendarGrid"></div>
-    </div>
-
-    <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-        <button class="nav-item active" onclick="showView('calendar')">
-            <div class="nav-item-icon">📅</div>
-            <div>Calendar</div>
-        </button>
-        <button class="nav-item" onclick="showView('tasks')">
-            <div class="nav-item-icon">✅</div>
-            <div>Tasks</div>
-        </button>
-        <button class="nav-item" onclick="showView('reminders')">
-            <div class="nav-item-icon">📌 </div>
-            <div>Reminders</div>
-        </button>
-        <button class="nav-item" onclick="showView('expenses')">
-            <div class="nav-item-icon">$</div>
-            <div>Expenses</div>
-        </button>
-    </div>
-
-    <!-- Add Task Modal -->
-    <div class="modal" id="taskModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">➕ New Task</div>
-                <button class="icon-btn" onclick="closeModal('taskModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <form onsubmit="addTask(event)">
-                    <div class="form-group">
-                        <label class="form-label">Title *</label>
-                        <input type="text" class="form-input" id="taskTitle" required placeholder="Enter task title">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-textarea" id="taskDescription" placeholder="Add details..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Date *</label>
-                        <input type="date" class="form-input" id="taskDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Category</label>
-                        <select class="form-select" id="taskCategory">
-                            <option>Work</option>
-                            <option selected>Personal</option>
-                            <option>Health</option>
-                            <option>Shopping</option>
-                            <option>Family</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Priority</label>
-                        <div class="priority-selector">
-                            <button type="button" class="priority-btn low" onclick="selectPriority('low', 'task')">Low</button>
-                            <button type="button" class="priority-btn selected" onclick="selectPriority('medium', 'task')">Medium</button>
-                            <button type="button" class="priority-btn high" onclick="selectPriority('high', 'task')">High</button>
-                        </div>
-                        <input type="hidden" id="taskPriority" value="medium">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Color</label>
-                        <div class="color-picker">
-                            <div class="color-option selected" style="background: #4285f4;" onclick="selectColor('#4285f4', 'task')"></div>
-                            <div class="color-option" style="background: #34A853;" onclick="selectColor('#34A853', 'task')"></div>
-                            <div class="color-option" style="background: #FBBC04;" onclick="selectColor('#FBBC04', 'task')"></div>
-                            <div class="color-option" style="background: #EA4335;" onclick="selectColor('#EA4335', 'task')"></div>
-                            <div class="color-option" style="background: #FF6D00;" onclick="selectColor('#FF6D00', 'task')"></div>
-                            <div class="color-option" style="background: #9C27B0;" onclick="selectColor('#9C27B0', 'task')"></div>
-                        </div>
-                        <input type="hidden" id="taskColor" value="#4285f4">
-                    </div>
-                    <button type="submit" class="btn-primary">Add Task</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Reminder Modal -->
-    <div class="modal" id="reminderModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">📌  New Reminder</div>
-                <button class="icon-btn" onclick="closeModal('reminderModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <form onsubmit="addReminder(event)">
-                    <div class="form-group">
-                        <label class="form-label">Title *</label>
-                        <input type="text" class="form-input" id="reminderTitle" required placeholder="Enter reminder title">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-textarea" id="reminderDescription" placeholder="Add details..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Date *</label>
-                        <input type="date" class="form-input" id="reminderDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Time *</label>
-                        <input type="time" class="form-input" id="reminderTime" required>
-                    </div>
-                    <button type="submit" class="btn-primary">Add Reminder</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Expense Modal -->
-    <div class="modal" id="expenseModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">$ New Expense</div>
-                <button class="icon-btn" onclick="closeModal('expenseModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <form onsubmit="addExpense(event)">
-                    <div class="form-group">
-                        <label class="form-label">Amount *</label>
-                        <input type="number" step="0.01" class="form-input" id="expenseAmount" required placeholder="0.00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Category</label>
-                        <select class="form-select" id="expenseCategory">
-                            <option>Food</option>
-                            <option>Transport</option>
-                            <option>Shopping</option>
-                            <option>Bills</option>
-                            <option>Entertainment</option>
-                            <option>Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <input type="text" class="form-input" id="expenseDescription" placeholder="What was this for?">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Date *</label>
-                        <input type="date" class="form-input" id="expenseDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Payment Method</label>
-                        <select class="form-select" id="expensePayment">
-                            <option>Cash</option>
-                            <option>Credit Card</option>
-                            <option>Debit Card</option>
-                            <option>Digital Wallet</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn-primary">Add Expense</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Statistics Modal -->
-    <div class="modal" id="statsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">📊 Statistics</div>
-                <button class="icon-btn" onclick="closeModal('statsModal')">✕</button>
-            </div>
-            <div class="modal-body" id="statsContent">
-                <div class="loading">Loading statistics...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search Modal -->
-    <div class="modal" id="searchModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">🔍 Search</div>
-                <button class="icon-btn" onclick="closeModal('searchModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="search-bar">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Search tasks, reminders, expenses..." oninput="performSearch()">
-                    <div class="search-icon">🔍</div>
+    <!-- Main App (Hidden until password is correct) -->
+    <div id="mainApp" style="display: none;">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-top">
+                <div class="logo">📅 My Calendar</div>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="showSearch()" title="Search">🔍</button>
+                    <button class="icon-btn" onclick="showStats()" title="Statistics">📊</button>
+                    <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
                 </div>
-                <div class="filter-chips" style="margin-bottom: 16px;">
-                    <div class="filter-chip active" onclick="filterSearch('all')">All</div>
-                    <div class="filter-chip" onclick="filterSearch('tasks')">Tasks</div>
-                    <div class="filter-chip" onclick="filterSearch('reminders')">Reminders</div>
-                    <div class="filter-chip" onclick="filterSearch('expenses')">Expenses</div>
+            </div>
+            <div class="month-selector" id="monthSelector">
+                <div class="month-display-group">
+                    <button class="nav-btn" onclick="prevMonth()">◀</button>
+                    <div class="month-display" id="monthDisplay"></div>
+                    <button class="nav-btn" onclick="nextMonth()">▶</button>
                 </div>
-                <div class="items-list" id="searchResults">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🔍</div>
-                        <div>Start typing to search</div>
+            </div>
+        </div>
+
+        <!-- Quick Add Buttons -->
+        <div class="quick-add">
+            <button class="quick-add-btn task" onclick="showAddTask()">➕ Task</button>
+            <button class="quick-add-btn reminder" onclick="showAddReminder()">📌 Reminder</button>
+            <button class="quick-add-btn expense" onclick="showAddExpense()">$ Expense</button>
+        </div>
+
+        <!-- Today's Items Section - Hidden by default -->
+        <div class="today-section" id="todaySection" style="display: none;">
+            <div class="section-title">
+                <span>📋 Today's Items</span>
+            </div>
+            <div class="items-list" id="todayItems">
+                <div class="empty-state">
+                    <div class="empty-state-icon">✨</div>
+                    <div>No items for today. Enjoy your free time!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Tasks Section -->
+        <div class="all-section" id="tasksSection" style="display: none;">
+            <div class="section-title">
+                <span>✅ All Tasks</span>
+            </div>
+            <div class="items-list" id="allTasks">
+                <div class="empty-state">
+                    <div class="empty-state-icon">✅</div>
+                    <div>No tasks yet. Add your first task!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Reminders Section -->
+        <div class="all-section" id="remindersSection" style="display: none;">
+            <div class="section-title">
+                <span>📌 All Reminders</span>
+            </div>
+            <div class="items-list" id="allRemindersDisplay">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📌</div>
+                    <div>No reminders yet. Add your first reminder!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Expenses Section -->
+        <div class="all-section" id="expensesSection" style="display: none;">
+            <div class="section-title">
+                <span>$ All Expenses</span>
+            </div>
+            <div class="items-list" id="allExpenses">
+                <div class="empty-state">
+                    <div class="empty-state-icon">$</div>
+                    <div>No expenses yet. Track your first expense!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Section -->
+        <div class="calendar-section" id="calendarSection">
+            <div class="section-title">📅 Calendar View</div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="showView('calendar', this)">
+                <div class="nav-item-icon">📅</div>
+                <div>Calendar</div>
+            </button>
+            <button class="nav-item" onclick="showView('tasks', this)">
+                <div class="nav-item-icon">✅</div>
+                <div>Tasks</div>
+            </button>
+            <button class="nav-item" onclick="showView('reminders', this)">
+                <div class="nav-item-icon">📌</div>
+                <div>Reminders</div>
+            </button>
+            <button class="nav-item" onclick="showView('expenses', this)">
+                <div class="nav-item-icon">$</div>
+                <div>Expenses</div>
+            </button>
+        </div>
+
+        <!-- Add Task Modal -->
+        <div class="modal" id="taskModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">➕ New Task</div>
+                    <button class="icon-btn" onclick="closeModal('taskModal')">✕</button>
+                </div>
+                <div class="modal-body">
+                    <form onsubmit="addTask(event)">
+                        <div class="form-group">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-input" id="taskTitle" required placeholder="Enter task title">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="taskDescription" placeholder="Add details..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date *</label>
+                            <input type="date" class="form-input" id="taskDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="taskCategory">
+                                <option>Work</option>
+                                <option selected>Personal</option>
+                                <option>Health</option>
+                                <option>Shopping</option>
+                                <option>Family</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Priority</label>
+                            <div class="priority-selector">
+                                <button type="button" class="priority-btn low" onclick="selectPriority('low', 'task')">Low</button>
+                                <button type="button" class="priority-btn selected" onclick="selectPriority('medium', 'task')">Medium</button>
+                                <button type="button" class="priority-btn high" onclick="selectPriority('high', 'task')">High</button>
+                            </div>
+                            <input type="hidden" id="taskPriority" value="medium">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Color</label>
+                            <div class="color-picker">
+                                <div class="color-option selected" style="background: #4285f4;" onclick="selectColor('#4285f4', 'task')"></div>
+                                <div class="color-option" style="background: #34A853;" onclick="selectColor('#34A853', 'task')"></div>
+                                <div class="color-option" style="background: #FBBC04;" onclick="selectColor('#FBBC04', 'task')"></div>
+                                <div class="color-option" style="background: #EA4335;" onclick="selectColor('#EA4335', 'task')"></div>
+                                <div class="color-option" style="background: #FF6D00;" onclick="selectColor('#FF6D00', 'task')"></div>
+                                <div class="color-option" style="background: #9C27B0;" onclick="selectColor('#9C27B0', 'task')"></div>
+                            </div>
+                            <input type="hidden" id="taskColor" value="#4285f4">
+                        </div>
+                        <button type="submit" class="btn-primary">Add Task</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Reminder Modal -->
+        <div class="modal" id="reminderModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">📌 New Reminder</div>
+                    <button class="icon-btn" onclick="closeModal('reminderModal')">✕</button>
+                </div>
+                <div class="modal-body">
+                    <form onsubmit="addReminder(event)">
+                        <div class="form-group">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-input" id="reminderTitle" required placeholder="Enter reminder title">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="reminderDescription" placeholder="Add details..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date *</label>
+                            <input type="date" class="form-input" id="reminderDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Time *</label>
+                            <input type="time" class="form-input" id="reminderTime" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Reminder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Expense Modal -->
+        <div class="modal" id="expenseModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">$ New Expense</div>
+                    <button class="icon-btn" onclick="closeModal('expenseModal')">✕</button>
+                </div>
+                <div class="modal-body">
+                    <form onsubmit="addExpense(event)">
+                        <div class="form-group">
+                            <label class="form-label">Amount *</label>
+                            <input type="number" step="0.01" class="form-input" id="expenseAmount" required placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="expenseCategory">
+                                <option>Food</option>
+                                <option>Transport</option>
+                                <option>Shopping</option>
+                                <option>Bills</option>
+                                <option>Entertainment</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-input" id="expenseDescription" placeholder="What was this for?">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date *</label>
+                            <input type="date" class="form-input" id="expenseDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-select" id="expensePayment">
+                                <option>Cash</option>
+                                <option>Credit Card</option>
+                                <option>Debit Card</option>
+                                <option>Digital Wallet</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Expense</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Modal -->
+        <div class="modal" id="statsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">📊 Statistics</div>
+                    <button class="icon-btn" onclick="closeModal('statsModal')">✕</button>
+                </div>
+                <div class="modal-body" id="statsContent">
+                    <div class="loading">Loading statistics...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Modal -->
+        <div class="modal" id="searchModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">🔍 Search</div>
+                    <button class="icon-btn" onclick="closeModal('searchModal')">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="search-bar">
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search tasks, reminders, expenses..." oninput="performSearch()">
+                        <div class="search-icon">🔍</div>
+                    </div>
+                    <div class="filter-chips" style="margin-bottom: 16px;">
+                        <div class="filter-chip active" onclick="filterSearch('all')">All</div>
+                        <div class="filter-chip" onclick="filterSearch('tasks')">Tasks</div>
+                        <div class="filter-chip" onclick="filterSearch('reminders')">Reminders</div>
+                        <div class="filter-chip" onclick="filterSearch('expenses')">Expenses</div>
+                    </div>
+                    <div class="items-list" id="searchResults">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔍</div>
+                            <div>Start typing to search</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1154,6 +1242,33 @@ body {
     </div>
 
     <script>
+        // Password protection
+        const CORRECT_PASSWORD = "Calendar2024"; // Change this to your desired password
+        
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            const errorDiv = document.getElementById('passwordError');
+            
+            if (input === CORRECT_PASSWORD) {
+                document.getElementById('passwordScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                initializeApp();
+            } else {
+                errorDiv.textContent = 'Incorrect password. Please try again.';
+                document.getElementById('passwordInput').value = '';
+                setTimeout(() => {
+                    errorDiv.textContent = '';
+                }, 3000);
+            }
+        }
+        
+        // Allow Enter key to submit password
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
         // Global variables
         let currentDate = new Date();
         let currentMonth = currentDate.getMonth();
@@ -1164,179 +1279,72 @@ body {
         let selectedDate = null;
         let currentView = 'calendar';
         let searchFilter = 'all';
-        let hasShownTodayPopup = false;
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-        });
+        // Local Storage Keys
+        const STORAGE_KEYS = {
+            tasks: 'calendar_tasks',
+            reminders: 'calendar_reminders',
+            expenses: 'calendar_expenses',
+            theme: 'calendar_theme'
+        };
 
-function initializeApp() {
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
-  document.getElementById('taskDate').value = todayStr;
-  document.getElementById('reminderDate').value = todayStr;
-  document.getElementById('expenseDate').value = todayStr;
-  document.getElementById('reminderTime').value = '09:00';
+        // Initialize App
+        function initializeApp() {
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            document.getElementById('taskDate').value = todayStr;
+            document.getElementById('reminderDate').value = todayStr;
+            document.getElementById('expenseDate').value = todayStr;
+            document.getElementById('reminderTime').value = '09:00';
 
-  loadTheme();
-  renderCalendar();
-  loadAllData();
-}
+            loadTheme();
+            loadData();
+            renderCalendar();
+        }
 
-function loadTheme() {
-  const theme = localStorage.getItem('theme') || 'light';
-  if (theme === 'dark') {
-    document.body.classList.add('dark');
-  }
-}
+        // Load data from localStorage
+        function loadData() {
+            // Load tasks
+            const savedTasks = localStorage.getItem(STORAGE_KEYS.tasks);
+            if (savedTasks) {
+                allTasks = JSON.parse(savedTasks);
+            }
+
+            // Load reminders
+            const savedReminders = localStorage.getItem(STORAGE_KEYS.reminders);
+            if (savedReminders) {
+                allReminders = JSON.parse(savedReminders);
+            }
+
+            // Load expenses
+            const savedExpenses = localStorage.getItem(STORAGE_KEYS.expenses);
+            if (savedExpenses) {
+                allExpenses = JSON.parse(savedExpenses);
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem(STORAGE_KEYS.tasks, JSON.stringify(allTasks));
+            localStorage.setItem(STORAGE_KEYS.reminders, JSON.stringify(allReminders));
+            localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(allExpenses));
+        }
+
+        // Theme functions
+        function loadTheme() {
+            const theme = localStorage.getItem(STORAGE_KEYS.theme) || 'light';
+            if (theme === 'dark') {
+                document.body.classList.add('dark');
+            }
+        }
 
         function toggleTheme() {
             document.body.classList.toggle('dark');
             const theme = document.body.classList.contains('dark') ? 'dark' : 'light';
-            localStorage.setItem('theme', theme);
+            localStorage.setItem(STORAGE_KEYS.theme, theme);
         }
 
-function loadAllData() {
-  // Define the current month range
-  var startDate = new Date(currentYear, currentMonth, 1).toISOString();
-  var endDate = new Date(currentYear, currentMonth + 1, 0).toISOString();
-
-  var tasksLoaded = false;
-  var remindersLoaded = false;
-  var expensesLoaded = false;
-
-  function checkAllLoaded() {
-    if (tasksLoaded && remindersLoaded && expensesLoaded) {
-      debugData();
-      renderCalendar();
-      checkTodayPopup();
-    }
-  }
-
-  // ---- Load Tasks ----
-google.script.run
-  .withSuccessHandler(function (result) {
-    console.log("📘 Tasks result:", result);
-    if (result && result.success) {
-      allTasks = result.tasks; // ← No need to map, dates are already strings
-    } else {
-      console.error("Tasks error:", result ? result.error : "No result");
-      allTasks = [];
-    }
-    tasksLoaded = true;
-    renderAllTasks();
-    checkAllLoaded();
-  })
-  .withFailureHandler(handleError)
-  .getTasks(startDate, endDate);
-
-  // ---- Load Reminders ----
-  google.script.run
-    .withSuccessHandler(function (result) {
-      console.log("Info Reminders result:", result);
-      if (result && result.success) {
-        allReminders = result.reminders.map(function (r) {
-          var obj = Object.assign({}, r);
-          obj.date = toYMD(r.date);
-          return obj;
-        });
-      } else {
-        console.error("Reminders error:", result ? result.error : "No result");
-        allReminders = [];
-      }
-      remindersLoaded = true;
-      renderAllReminders();
-      checkAllLoaded();
-    })
-    .withFailureHandler(handleError)
-    .getReminders(startDate, endDate);
-
-  // ---- Load Expenses ----
-  google.script.run
-    .withSuccessHandler(function (result) {
-      console.log("Info Expenses result:", result);
-      if (result && result.success) {
-        allExpenses = result.expenses.map(function (e) {
-          var obj = Object.assign({}, e);
-          obj.date = toYMD(e.date);
-          return obj;
-        });
-      } else {
-        console.error("Expenses error:", result ? result.error : "No result");
-        allExpenses = [];
-      }
-      expensesLoaded = true;
-      renderAllExpenses();
-      checkAllLoaded();
-    })
-    .withFailureHandler(handleError)
-    .getExpenses(startDate, endDate);
-}
-
-function debugData() {
-  console.log("ok allTasks:", allTasks);
-  console.log("ok allReminders:", allReminders);
-  console.log("ok allExpenses:", allExpenses);
-}
-
-function checkTodayPopup() {
-    if (!hasShownTodayPopup) {
-        const today = new Date().toISOString().split('T')[0];
-        const hasTodayItems = 
-            allTasks.some(t => t.date === today) ||
-            allReminders.some(r => r.date === today) ||
-            allExpenses.some(e => e.date === today);
-        
-        if (hasTodayItems) {
-            // Small delay to ensure UI is ready
-            setTimeout(showTodayPopup, 500);
-        }
-        hasShownTodayPopup = true;
-    }
-}
-
-function showTodayPopup() {
-    const today = new Date().toISOString().split('T')[0];
-    const todayTasks = allTasks.filter(t => t.date === today);
-    const todayReminders = allReminders.filter(r => r.date === today);
-    const todayExpenses = allExpenses.filter(e => e.date === today);
-
-    const totalItems = todayTasks.length + todayReminders.length + todayExpenses.length;
-    
-    if (totalItems === 0) {
-        showNotification('✨ No items scheduled for today!\nEnjoy your free time! 😊', 3000);
-        return;
-    }
-
-    let message = '📋 Today\'s Schedule:\n\n';
-    
-    if (todayTasks.length > 0) {
-        const completedCount = todayTasks.filter(t => t.completed).length;
-        message += `✅ Tasks: ${todayTasks.length} (${completedCount} completed)\n`;
-    }
-    if (todayReminders.length > 0) {
-        message += `📌  Reminders: ${todayReminders.length}\n`;
-    }
-    if (todayExpenses.length > 0) {
-        const totalAmount = todayExpenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2);
-        message += `$ Expenses: ${todayExpenses.length} (Total: ${totalAmount})\n`;
-    }
-
-    message += '\n📅 Have a productive day!';
-
-    showNotification(message, 5000);
-}
-
-function animateCalendarChange() {
-    const grid = document.getElementById('calendarGrid');
-    grid.style.opacity = '0';
-    setTimeout(() => {
-        grid.style.transition = 'opacity 0.4s ease';
-        grid.style.opacity = '1';
-    }, 100);
-}
-
+        // Calendar functions
         function renderCalendar() {
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                               'July', 'August', 'September', 'October', 'November', 'December'];
@@ -1409,9 +1417,9 @@ function animateCalendarChange() {
                 indicators.className = 'day-indicators';
 
                 // Count items for this day
-const tasksCount = allTasks.filter(t => t.date === dateStr).length;
-const remindersCount = allReminders.filter(r => r.date === dateStr).length;
-const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
+                const tasksCount = allTasks.filter(t => t.date === dateStr).length;
+                const remindersCount = allReminders.filter(r => r.date === dateStr).length;
+                const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
 
                 if (tasksCount > 0) {
                     const indicator = document.createElement('div');
@@ -1472,9 +1480,9 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
             const results = document.getElementById('searchResults');
             results.innerHTML = '';
 
-            const dayTasks = allTasks.filter(t => t.date.startsWith(dateStr));
-            const dayReminders = allReminders.filter(r => r.date.startsWith(dateStr));
-            const dayExpenses = allExpenses.filter(e => e.date.startsWith(dateStr));
+            const dayTasks = allTasks.filter(t => t.date === dateStr);
+            const dayReminders = allReminders.filter(r => r.date === dateStr);
+            const dayExpenses = allExpenses.filter(e => e.date === dateStr);
 
             if (dayTasks.length === 0 && dayReminders.length === 0 && dayExpenses.length === 0) {
                 results.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div>No items for this day</div></div>';
@@ -1486,25 +1494,173 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
             dayExpenses.forEach(expense => results.appendChild(createExpenseCard(expense)));
         }
 
-        function renderTodayItems() {
-            const today = new Date().toISOString().split('T')[0];
-            const container = document.getElementById('todayItems');
-            container.innerHTML = '';
-
-            const todayTasks = allTasks.filter(t => t.date.startsWith(today));
-            const todayReminders = allReminders.filter(r => r.date.startsWith(today));
-            const todayExpenses = allExpenses.filter(e => e.date.startsWith(today));
-
-            if (todayTasks.length === 0 && todayReminders.length === 0 && todayExpenses.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✨</div><div>No items for today. Enjoy your free time!</div></div>';
-                return;
+        // Navigation functions
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
             }
-
-            todayTasks.forEach(task => container.appendChild(createTaskCard(task)));
-            todayReminders.forEach(reminder => container.appendChild(createReminderCard(reminder)));
-            todayExpenses.forEach(expense => container.appendChild(createExpenseCard(expense)));
+            renderCalendar();
         }
 
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        // View functions - FIXED VERSION
+        function showView(view, buttonElement) {
+            currentView = view;
+            
+            // Update nav items - use the passed button element instead of event.target
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            buttonElement.classList.add('active');
+            
+            // Show/hide sections
+            document.getElementById('calendarSection').style.display = view === 'calendar' ? 'block' : 'none';
+            document.getElementById('tasksSection').style.display = view === 'tasks' ? 'block' : 'none';
+            document.getElementById('remindersSection').style.display = view === 'reminders' ? 'block' : 'none';
+            document.getElementById('expensesSection').style.display = view === 'expenses' ? 'block' : 'none';
+            
+            // Render data if needed
+            if (view === 'tasks') renderAllTasks();
+            if (view === 'reminders') renderAllReminders();
+            if (view === 'expenses') renderAllExpenses();
+        }
+
+        // Modal functions
+        function showAddTask() {
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function showAddReminder() {
+            document.getElementById('reminderModal').classList.add('active');
+        }
+
+        function showAddExpense() {
+            document.getElementById('expenseModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showSearch() {
+            document.getElementById('searchModal').classList.add('active');
+            document.getElementById('searchInput').focus();
+        }
+
+        function showStats() {
+            document.getElementById('statsModal').classList.add('active');
+            loadStats();
+        }
+
+        // Add item functions
+        function addTask(event) {
+            event.preventDefault();
+            
+            const task = {
+                id: Date.now().toString(),
+                title: document.getElementById('taskTitle').value,
+                description: document.getElementById('taskDescription').value,
+                date: document.getElementById('taskDate').value,
+                category: document.getElementById('taskCategory').value,
+                priority: document.getElementById('taskPriority').value,
+                color: document.getElementById('taskColor').value,
+                completed: false
+            };
+            
+            allTasks.push(task);
+            saveData();
+            
+            // Reset form
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDescription').value = '';
+            
+            // Close modal
+            closeModal('taskModal');
+            
+            // Refresh view
+            if (currentView === 'calendar') {
+                renderCalendar();
+            } else if (currentView === 'tasks') {
+                renderAllTasks();
+            }
+            
+            showNotification('Task added successfully');
+        }
+
+        function addReminder(event) {
+            event.preventDefault();
+            
+            const reminder = {
+                id: Date.now().toString(),
+                title: document.getElementById('reminderTitle').value,
+                description: document.getElementById('reminderDescription').value,
+                date: document.getElementById('reminderDate').value,
+                time: document.getElementById('reminderTime').value
+            };
+            
+            allReminders.push(reminder);
+            saveData();
+            
+            // Reset form
+            document.getElementById('reminderTitle').value = '';
+            document.getElementById('reminderDescription').value = '';
+            
+            // Close modal
+            closeModal('reminderModal');
+            
+            // Refresh view
+            if (currentView === 'calendar') {
+                renderCalendar();
+            } else if (currentView === 'reminders') {
+                renderAllReminders();
+            }
+            
+            showNotification('Reminder added successfully');
+        }
+
+        function addExpense(event) {
+            event.preventDefault();
+            
+            const expense = {
+                id: Date.now().toString(),
+                amount: document.getElementById('expenseAmount').value,
+                category: document.getElementById('expenseCategory').value,
+                description: document.getElementById('expenseDescription').value,
+                date: document.getElementById('expenseDate').value,
+                paymentMethod: document.getElementById('expensePayment').value
+            };
+            
+            allExpenses.push(expense);
+            saveData();
+            
+            // Reset form
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseDescription').value = '';
+            
+            // Close modal
+            closeModal('expenseModal');
+            
+            // Refresh view
+            if (currentView === 'calendar') {
+                renderCalendar();
+            } else if (currentView === 'expenses') {
+                renderAllExpenses();
+            }
+            
+            showNotification('Expense added successfully');
+        }
+
+        // Render functions
         function renderAllTasks() {
             const container = document.getElementById('allTasks');
             container.innerHTML = '';
@@ -1524,7 +1680,7 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
             container.innerHTML = '';
 
             if (allReminders.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📌 </div><div>No reminders yet. Add your first reminder!</div></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📌</div><div>No reminders yet. Add your first reminder!</div></div>';
                 return;
             }
 
@@ -1551,6 +1707,7 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
             sortedExpenses.forEach(expense => container.appendChild(createExpenseCard(expense)));
         }
 
+        // Card creation functions
         function createTaskCard(task) {
             const card = document.createElement('div');
             card.className = 'item-card';
@@ -1585,14 +1742,14 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
 
             card.innerHTML = `
                 <div class="item-header">
-                    <div class="item-title">📌  ${escapeHtml(reminder.title)}</div>
+                    <div class="item-title">📌 ${escapeHtml(reminder.title)}</div>
                     <div class="item-actions">
                         <button class="item-action-btn" onclick="deleteItem('reminder', '${reminder.id}')">🗑️</button>
                     </div>
                 </div>
                 ${reminder.description ? `<div class="item-description">${escapeHtml(reminder.description)}</div>` : ''}
                 <div class="item-meta">
-                    <span class="item-badge">📌  ${reminder.time}</span>
+                    <span class="item-badge">📌 ${reminder.time}</span>
                 </div>
             `;
 
@@ -1620,153 +1777,45 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
             return card;
         }
 
+        // Item actions
         function toggleTask(id, completed) {
-            google.script.run
-                .withSuccessHandler(function(result) {
-                    if (result.success) {
-                        const task = allTasks.find(t => t.id === id);
-                        if (task) task.completed = completed;
-                        renderAllTasks();
-                        renderCalendar();
-                    }
-                })
-                .withFailureHandler(handleError)
-                .updateTask(id, { completed: completed });
+            const task = allTasks.find(t => t.id === id);
+            if (task) {
+                task.completed = completed;
+                saveData();
+                renderAllTasks();
+                renderCalendar();
+            }
         }
 
         function deleteItem(type, id) {
             if (!confirm('Are you sure you want to delete this item?')) return;
 
-            const funcName = type === 'task' ? 'deleteTask' : 
-                           type === 'reminder' ? 'deleteReminder' : 'deleteExpense';
-
-            google.script.run
-                .withSuccessHandler(function(result) {
-                    if (result.success) {
-                        if (type === 'task') allTasks = allTasks.filter(t => t.id !== id);
-                        if (type === 'reminder') allReminders = allReminders.filter(r => r.id !== id);
-                        if (type === 'expense') allExpenses = allExpenses.filter(e => e.id !== id);
-                        
-                        // Refresh current view
-                        if (currentView === 'calendar') {
-                            renderCalendar();
-                        } else if (currentView === 'tasks') {
-                            renderAllTasks();
-                        } else if (currentView === 'reminders') {
-                            renderAllReminders();
-                        } else if (currentView === 'expenses') {
-                            renderAllExpenses();
-                        }
-                        
-                        showNotification('Item deleted successfully');
-                    }
-                })
-                .withFailureHandler(handleError)
-                [funcName](id);
-        }
-
-        // UI Functions
-        function showView(view) {
-            currentView = view;
-            
-            // Update nav items
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.closest('.nav-item').classList.add('active');
-            
-            // Show/hide sections
-            document.getElementById('calendarSection').style.display = view === 'calendar' ? 'block' : 'none';
-            document.getElementById('tasksSection').style.display = view === 'tasks' ? 'block' : 'none';
-            document.getElementById('remindersSection').style.display = view === 'reminders' ? 'block' : 'none';
-            document.getElementById('expensesSection').style.display = view === 'expenses' ? 'block' : 'none';
-            
-            // Render data if needed
-            if (view === 'tasks') renderAllTasks();
-            if (view === 'reminders') renderAllReminders();
-            if (view === 'expenses') renderAllExpenses();
-        }
-
-        function showAddTask() {
-            document.getElementById('taskModal').classList.add('active');
-        }
-
-        function showAddReminder() {
-            document.getElementById('reminderModal').classList.add('active');
-        }
-
-        function showAddExpense() {
-            document.getElementById('expenseModal').classList.add('active');
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        function showSearch() {
-            document.getElementById('searchModal').classList.add('active');
-            document.getElementById('searchInput').focus();
-        }
-
-        function showStats() {
-            document.getElementById('statsModal').classList.add('active');
-            loadStats();
-        }
-
-        function loadStats() {
-            const statsContent = document.getElementById('statsContent');
-            
-            // Calculate stats
-            const totalTasks = allTasks.length;
-            const completedTasks = allTasks.filter(t => t.completed).length;
-            const totalReminders = allReminders.length;
-            const totalExpenses = allExpenses.length;
-            const totalExpenseAmount = allExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0).toFixed(2);
-            
-            // Group expenses by category
-            const expensesByCategory = {};
-            allExpenses.forEach(e => {
-                if (!expensesByCategory[e.category]) expensesByCategory[e.category] = 0;
-                expensesByCategory[e.category] += parseFloat(e.amount);
-            });
-            
-            // Generate HTML
-            let html = `
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value">${totalTasks}</div>
-                        <div class="stat-label">Total Tasks</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${completedTasks}</div>
-                        <div class="stat-label">Completed Tasks</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${totalReminders}</div>
-                        <div class="stat-label">Total Reminders</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">$${totalExpenseAmount}</div>
-                        <div class="stat-label">Total Expenses</div>
-                    </div>
-                </div>
-            `;
-            
-            if (Object.keys(expensesByCategory).length > 0) {
-                html += '<h3 style="margin-top: 20px; margin-bottom: 10px;">Expenses by Category</h3>';
-                for (const [category, amount] of Object.entries(expensesByCategory)) {
-                    html += `
-                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border);">
-                            <span>${category}</span>
-                            <span style="font-weight: 600;">$${amount.toFixed(2)}</span>
-                        </div>
-                    `;
-                }
+            if (type === 'task') {
+                allTasks = allTasks.filter(t => t.id !== id);
+            } else if (type === 'reminder') {
+                allReminders = allReminders.filter(r => r.id !== id);
+            } else if (type === 'expense') {
+                allExpenses = allExpenses.filter(e => e.id !== id);
             }
             
-            statsContent.innerHTML = html;
+            saveData();
+            
+            // Refresh current view
+            if (currentView === 'calendar') {
+                renderCalendar();
+            } else if (currentView === 'tasks') {
+                renderAllTasks();
+            } else if (currentView === 'reminders') {
+                renderAllReminders();
+            } else if (currentView === 'expenses') {
+                renderAllExpenses();
+            }
+            
+            showNotification('Item deleted successfully');
         }
 
+        // Search functions
         function performSearch() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const results = document.getElementById('searchResults');
@@ -1837,32 +1886,62 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
             performSearch();
         }
 
-        function prevMonth() {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
+        // Statistics
+        function loadStats() {
+            const statsContent = document.getElementById('statsContent');
+            
+            // Calculate stats
+            const totalTasks = allTasks.length;
+            const completedTasks = allTasks.filter(t => t.completed).length;
+            const totalReminders = allReminders.length;
+            const totalExpenses = allExpenses.length;
+            const totalExpenseAmount = allExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0).toFixed(2);
+            
+            // Group expenses by category
+            const expensesByCategory = {};
+            allExpenses.forEach(e => {
+                if (!expensesByCategory[e.category]) expensesByCategory[e.category] = 0;
+                expensesByCategory[e.category] += parseFloat(e.amount);
+            });
+            
+            // Generate HTML
+            let html = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${totalTasks}</div>
+                        <div class="stat-label">Total Tasks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${completedTasks}</div>
+                        <div class="stat-label">Completed Tasks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${totalReminders}</div>
+                        <div class="stat-label">Total Reminders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">$${totalExpenseAmount}</div>
+                        <div class="stat-label">Total Expenses</div>
+                    </div>
+                </div>
+            `;
+            
+            if (Object.keys(expensesByCategory).length > 0) {
+                html += '<h3 style="margin-top: 20px; margin-bottom: 10px;">Expenses by Category</h3>';
+                for (const [category, amount] of Object.entries(expensesByCategory)) {
+                    html += `
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border);">
+                            <span>${category}</span>
+                            <span style="font-weight: 600;">$${amount.toFixed(2)}</span>
+                        </div>
+                    `;
+                }
             }
-            animateCalendarChange();
-            setTimeout(() => {
-                renderCalendar();
-                loadAllData();
-            }, 200);
+            
+            statsContent.innerHTML = html;
         }
 
-        function nextMonth() {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            animateCalendarChange();
-            setTimeout(() => {
-                renderCalendar();
-                loadAllData();
-            }, 200);
-        }
-
+        // Utility functions
         function selectPriority(priority, type) {
             // Update selected button
             const container = event.target.closest('.priority-selector');
@@ -1885,131 +1964,6 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
             
             // Update hidden input
             document.getElementById(`${type}Color`).value = color;
-        }
-
-        function addTask(event) {
-            event.preventDefault();
-            
-            const task = {
-                title: document.getElementById('taskTitle').value,
-                description: document.getElementById('taskDescription').value,
-                date: document.getElementById('taskDate').value,
-                category: document.getElementById('taskCategory').value,
-                priority: document.getElementById('taskPriority').value,
-                color: document.getElementById('taskColor').value,
-                completed: false
-            };
-            
-            google.script.run
-                .withSuccessHandler(function(result) {
-                    if (result.success) {
-                        task.id = result.id;
-                        allTasks.push(task);
-                        
-                        // Reset form
-                        document.getElementById('taskTitle').value = '';
-                        document.getElementById('taskDescription').value = '';
-                        
-                        // Close modal
-                        closeModal('taskModal');
-                        
-                        // Refresh view
-                        if (currentView === 'calendar') {
-                            renderCalendar();
-                        } else if (currentView === 'tasks') {
-                            renderAllTasks();
-                        }
-                        
-                        showNotification('Task added successfully');
-                    }
-                })
-                .withFailureHandler(handleError)
-                .addTask(task);
-        }
-
-        function addReminder(event) {
-            event.preventDefault();
-            
-            const reminder = {
-                title: document.getElementById('reminderTitle').value,
-                description: document.getElementById('reminderDescription').value,
-                date: document.getElementById('reminderDate').value,
-                time: document.getElementById('reminderTime').value
-            };
-            
-            google.script.run
-                .withSuccessHandler(function(result) {
-                    if (result.success) {
-                        reminder.id = result.id;
-                        allReminders.push(reminder);
-                        
-                        // Reset form
-                        document.getElementById('reminderTitle').value = '';
-                        document.getElementById('reminderDescription').value = '';
-                        
-                        // Close modal
-                        closeModal('reminderModal');
-                        
-                        // Refresh view
-                        if (currentView === 'calendar') {
-                            renderCalendar();
-                        } else if (currentView === 'reminders') {
-                            renderAllReminders();
-                        }
-                        
-                        showNotification('Reminder added successfully');
-                    }
-                })
-                .withFailureHandler(handleError)
-                .addReminder(reminder);
-        }
-
-        function addExpense(event) {
-            event.preventDefault();
-            
-            const expense = {
-                amount: document.getElementById('expenseAmount').value,
-                category: document.getElementById('expenseCategory').value,
-                description: document.getElementById('expenseDescription').value,
-                date: document.getElementById('expenseDate').value,
-                paymentMethod: document.getElementById('expensePayment').value
-            };
-            
-            google.script.run
-                .withSuccessHandler(function(result) {
-                    if (result.success) {
-                        expense.id = result.id;
-                        allExpenses.push(expense);
-                        
-                        // Reset form
-                        document.getElementById('expenseAmount').value = '';
-                        document.getElementById('expenseDescription').value = '';
-                        
-                        // Close modal
-                        closeModal('expenseModal');
-                        
-                        // Refresh view
-                        if (currentView === 'calendar') {
-                            renderCalendar();
-                        } else if (currentView === 'expenses') {
-                            renderAllExpenses();
-                        }
-                        
-                        showNotification('Expense added successfully');
-                    }
-                })
-                .withFailureHandler(handleError)
-                .addExpense(expense);
-        }
-
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-            }
         }
 
         function showNotification(message, duration = 3000) {
@@ -2048,11 +2002,6 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
             }, duration);
         }
 
-        function handleError(error) {
-            console.error(error);
-            showNotification('An error occurred. Please try again.');
-        }
-
         function escapeHtml(text) {
             const map = {
                 '&': '&amp;',
@@ -2063,12 +2012,6 @@ const expensesCount = allExpenses.filter(e => e.date === dateStr).length;
             };
             
             return text.replace(/[&<>"']/g, m => map[m]);
-        }
-
-        function toYMD(date) {
-            if (typeof date === 'string') return date;
-            const d = new Date(date);
-            return d.toISOString().split('T')[0];
         }
     </script>
 </body>
